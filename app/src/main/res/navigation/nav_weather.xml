@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_weather"
+    app:startDestination="@id/searchFragment">
+
+    <fragment
+        android:id="@+id/currentConditionsFragment"
+        android:name="com.gaur.weatherapp.fragments.CurrentConditionsFragment"
+        android:label="fragment_current_conditions"
+        tools:layout="@layout/fragment_current_conditions" >
+        <argument
+            android:name="weather_response"
+            app:argType="com.gaur.weatherapp.model.WeatherResponseDTO"
+            app:nullable="true"
+            android:defaultValue="@null" />
+        <action
+            android:id="@+id/action_currentConditionsFragment_to_forecastFragment"
+            app:destination="@id/forecastFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/forecastFragment"
+        android:name="com.gaur.weatherapp.fragments.ForecastFragment"
+        android:label="fragment_forecast"
+        tools:layout="@layout/fragment_forecast" >
+        <argument
+            android:name="weather_response"
+            app:argType="com.gaur.weatherapp.model.WeatherResponseDTO"
+            app:nullable="true"
+            android:defaultValue="@null" />
+    </fragment>
+    <fragment
+        android:id="@+id/searchFragment"
+        android:name="com.gaur.weatherapp.fragments.SearchFragment"
+        android:label="fragment_search"
+        tools:layout="@layout/fragment_search" >
+        <action
+            android:id="@+id/action_searchFragment_to_currentConditionsFragment"
+            app:destination="@id/currentConditionsFragment" />
+    </fragment>
+</navigation>
