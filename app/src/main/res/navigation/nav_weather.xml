@@ -9,7 +9,7 @@
         android:id="@+id/currentConditionsFragment"
         android:name="com.gaur.weatherapp.fragments.CurrentConditionsFragment"
         android:label="fragment_current_conditions"
-        tools:layout="@layout/fragment_current_conditions" >
+        tools:layout="@layout/fragment_current_conditions">
         <argument
             android:name="weather_response"
             app:argType="com.gaur.weatherapp.model.WeatherResponseDTO"
@@ -18,17 +18,39 @@
         <action
             android:id="@+id/action_currentConditionsFragment_to_forecastFragment"
             app:destination="@id/forecastFragment" />
+        <argument
+            android:name="lat"
+            android:defaultValue="0"
+            app:argType="float" />
+        <argument
+            android:name="long"
+            android:defaultValue="0"
+            app:argType="float" />
+        <argument
+            android:name="is_current_location"
+            android:defaultValue="false"
+            app:argType="boolean" />
     </fragment>
     <fragment
         android:id="@+id/forecastFragment"
         android:name="com.gaur.weatherapp.fragments.ForecastFragment"
         android:label="fragment_forecast"
-        tools:layout="@layout/fragment_forecast" >
+        tools:layout="@layout/fragment_forecast">
         <argument
             android:name="weather_response"
             app:argType="com.gaur.weatherapp.model.WeatherResponseDTO"
             app:nullable="true"
             android:defaultValue="@null" />
+        <argument
+            android:name="lat"
+            app:argType="float" />
+        <argument
+            android:name="long"
+            app:argType="float" />
+        <argument
+            android:name="is_current_loaction"
+            android:defaultValue="false"
+            app:argType="boolean" />
     </fragment>
     <fragment
         android:id="@+id/searchFragment"

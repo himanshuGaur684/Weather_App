@@ -19,10 +19,20 @@ interface ApiService {
     @GET("data/2.5/forecast/daily")
     suspend fun getSixteenDaysForecast(
         @Query("lat") lat: Double,
-        @Query("lon") long:Double,
-        @Query("cnt") cnt:Int=16,
-        @Query("appid") appId:String = Constant.APP_ID
+        @Query("lon") long: Double,
+        @Query("cnt") cnt: Int = 16,
+        @Query("appid") appId: String = Constant.APP_ID
     ): Response<ForecastDTO>
+
+
+    @GET("data/2.5/weather")
+    suspend fun getCurrentWeather(
+        @Query("lat") lat: Double,
+        @Query("lon") long: Double,
+        @Query("appid") appId: String = Constant.APP_ID
+    ): Response<WeatherResponseDTO>
+
+    // https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API key}
 
 
 }
