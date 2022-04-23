@@ -18,24 +18,38 @@ import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.work.*
+import com.gaur.weatherapp.NotificationService
+import com.gaur.weatherapp.R
 import com.gaur.weatherapp.databinding.FragmentSearchBinding
+import com.gaur.weatherapp.utils.AppSharedPref
+import com.gaur.weatherapp.utils.Constant
 import com.gaur.weatherapp.utils.Resource
+import com.gaur.weatherapp.utils.makeToast
+import com.gaur.weatherapp.viewmodels.CurrentConditionViewModel
 import com.gaur.weatherapp.viewmodels.SearchViewModel
+import com.gaur.weatherapp.work_manager.GetWeatherDataWorker
 import com.google.android.gms.location.*
 import dagger.hilt.android.AndroidEntryPoint
+import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
 
 @AndroidEntryPoint
 class SearchFragment : Fragment() {
 
-    private val searchViewModel: SearchViewModel by viewModels()
+    @Inject
+    lateinit var sharedPref: AppSharedPref
 
+    private val searchViewModel: SearchViewModel by viewModels()
+    private val currentConditionViewModel by viewModels<CurrentConditionViewModel>()
     private var _binding: FragmentSearchBinding? = null
     private val binding: FragmentSearchBinding
         get() = _binding!!
 
-
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient
+
+    private var currentOrNotification = Constant.CurrentOrNotification.CURRENT
 
 
     private val callback = object : LocationCallback() {
@@ -46,18 +60,24 @@ class SearchFragment : Fragment() {
         override fun onLocationResult(result: LocationResult) {
             val lastLocation = result.lastLocation
             Log.d("TAG", "onLocationResult: ${lastLocation?.longitude.toString()}")
-
-            val lat = lastLocation.latitude
-            val long = lastLocation.longitude
-
-            findNavController().navigate(
-                SearchFragmentDirections.actionSearchFragmentToCurrentConditionsFragment(
-                    isCurrentLocation = true,
-                    lat = lat.toFloat(),
-                    long = long.toFloat()
-                )
-            )
-
+            sharedPref.putLatitude(lastLocation.latitude.toString())
+            sharedPref.putLongitude(lastLocation.longitude.toString())
+            when (currentOrNotification) {
+                Constant.CurrentOrNotification.CURRENT -> {
+                    findNavController().navigate(
+                        SearchFragmentDirections.actionSearchFragmentToCurrentConditionsFragment(
+                            isCurrentLocation = true,
+                            lat = sharedPref.getLatitude().toFloat(),
+                            long = sharedPref.getLatitude().toFloat()
+                        )
+                    )
+                }
+                Constant.CurrentOrNotification.NOTIFICATION -> {
+                    sharedPref.putIsNotificationOn(true)
+                    binding.btnTurnOnNotification.text = getString(R.string.turn_off_notifications)
+                    enqueuePeriodicWork()
+                }
+            }
             super.onLocationResult(result)
         }
     }
@@ -78,11 +98,7 @@ class SearchFragment : Fragment() {
 
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-
-        fusedLocationProviderClient =
-            LocationServices.getFusedLocationProviderClient(requireContext())
-
-
+        initView()
         setObserver()
         binding.edZipCode.doAfterTextChanged {
             if (it.toString().length >= 5) {
@@ -93,6 +109,7 @@ class SearchFragment : Fragment() {
         }
 
         binding.btnCurrentLocation.setOnClickListener {
+            currentOrNotification = Constant.CurrentOrNotification.CURRENT
             onGPS()
         }
 
@@ -100,7 +117,41 @@ class SearchFragment : Fragment() {
             getWeather(binding.edZipCode.text.toString().trim())
         }
 
+        binding.btnTurnOnNotification.setOnClickListener {
+            if (binding.btnTurnOnNotification.text == getString(R.string.turn_on_notifications)) {
+                currentOrNotification = Constant.CurrentOrNotification.NOTIFICATION
+                if (!isLocationEnabled()) {
+                    requireContext().makeToast("Please give location permission")
+                    startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                } else {
+                    fetchLocation()
+                }
+            }
+            if (binding.btnTurnOnNotification.text == getString(R.string.turn_off_notifications)) {
+                binding.btnTurnOnNotification.text = getString(R.string.turn_on_notifications)
+                sharedPref.putIsNotificationOn(false)
+                requireContext().makeToast("Notification is closed.")
+                WorkManager.getInstance(requireContext()).cancelAllWork()
+                requireContext().stopService(
+                    Intent(
+                        requireContext(),
+                        NotificationService::class.java
+                    )
+                )
+            }
+        }
 
+
+    }
+
+    private fun initView() {
+        fusedLocationProviderClient =
+            LocationServices.getFusedLocationProviderClient(requireContext())
+        if (sharedPref.isNotificationOn()) {
+            binding.btnTurnOnNotification.text = getString(R.string.turn_off_notifications)
+        } else {
+            binding.btnTurnOnNotification.text = getString(R.string.turn_on_notifications)
+        }
     }
 
     fun setObserver() {
@@ -111,7 +162,6 @@ class SearchFragment : Fragment() {
 
                     }
                     is Resource.Success -> {
-                        Log.d("TAG", "getWeather: ${it.data}")
                         findNavController().navigate(
                             SearchFragmentDirections.actionSearchFragmentToCurrentConditionsFragment(
                                 weatherResponse = it.data
@@ -141,8 +191,6 @@ class SearchFragment : Fragment() {
         } else {
             fetchLocation()
         }
-
-
     }
 
     private fun fetchLocation() {
@@ -192,8 +240,19 @@ class SearchFragment : Fragment() {
     }
 
 
-    override fun onResume() {
-        super.onResume()
+    fun enqueuePeriodicWork() {
+        val constraints =
+            Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
+        val periodicWorkRequest =
+            PeriodicWorkRequestBuilder<GetWeatherDataWorker>(10, TimeUnit.SECONDS)
+                .setConstraints(constraints)
+                .build()
+        WorkManager.getInstance(requireContext()).enqueueUniquePeriodicWork(
+            "periodic",
+            ExistingPeriodicWorkPolicy.REPLACE,
+            periodicWorkRequest
+        )
     }
+
 
 }

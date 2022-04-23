@@ -83,6 +83,21 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/btnSearch" />
 
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnTurnOnNotification"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_marginTop="@dimen/_32sdp"
+                android:elevation="@dimen/_12sdp"
+                android:text="@string/turn_on_notifications"
+                android:textAllCaps="false"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/btnCurrentLocation" />
+
+
         </androidx.constraintlayout.widget.ConstraintLayout>
 
 
