@@ -26,7 +26,6 @@ import com.gaur.weatherapp.utils.AppSharedPref
 import com.gaur.weatherapp.utils.Constant
 import com.gaur.weatherapp.utils.Resource
 import com.gaur.weatherapp.utils.makeToast
-import com.gaur.weatherapp.viewmodels.CurrentConditionViewModel
 import com.gaur.weatherapp.viewmodels.SearchViewModel
 import com.gaur.weatherapp.work_manager.GetWeatherDataWorker
 import com.google.android.gms.location.*
@@ -42,13 +41,10 @@ class SearchFragment : Fragment() {
     lateinit var sharedPref: AppSharedPref
 
     private val searchViewModel: SearchViewModel by viewModels()
-    private val currentConditionViewModel by viewModels<CurrentConditionViewModel>()
     private var _binding: FragmentSearchBinding? = null
     private val binding: FragmentSearchBinding
         get() = _binding!!
-
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient
-
     private var currentOrNotification = Constant.CurrentOrNotification.CURRENT
 
 
@@ -244,7 +240,7 @@ class SearchFragment : Fragment() {
         val constraints =
             Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
         val periodicWorkRequest =
-            PeriodicWorkRequestBuilder<GetWeatherDataWorker>(10, TimeUnit.SECONDS)
+            PeriodicWorkRequestBuilder<GetWeatherDataWorker>(10, TimeUnit.MINUTES)
                 .setConstraints(constraints)
                 .build()
         WorkManager.getInstance(requireContext()).enqueueUniquePeriodicWork(

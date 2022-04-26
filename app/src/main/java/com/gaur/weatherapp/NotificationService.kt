@@ -51,7 +51,7 @@ class NotificationService : Service() {
                     .setContentTitle("Current Weather Info")
                     .setContentText(title)
                     .setLargeIcon(bitmap)
-                    .setSmallIcon(R.drawable.ic_circle)
+                    .setSmallIcon(R.drawable.weather_app_icon)
                     .build()
                 notificationManagerCompat?.notify(0, notification)
             } catch (e: Exception) {
